@@ -484,7 +484,12 @@
 
         // Sort descending (most recent first) and remove duplicates
         const uniqueDates = [...new Set(memberCheckins)].sort((a, b) => b.localeCompare(a));
-        const totalDays = uniqueDates.length;
+        const workoutDays = uniqueDates.length;
+
+        // Total days = calendar days since member joined (inclusive of today)
+        const joinDate = new Date(member.created_at);
+        const today = new Date();
+        const totalDays = Math.max(1, Math.floor((today - joinDate) / (1000 * 60 * 60 * 24)) + 1);
         
         let currentStreak = 0;
         let hasCheckedInToday = uniqueDates.includes(todayStr);
@@ -513,6 +518,7 @@
           ...member,
           currentStreak,
           totalDays,
+          workoutDays,
           hasCheckedInToday
         };
       });
@@ -565,9 +571,9 @@
         // Sort based on selected state
         const sorted = [...membersWithStreaks].sort((a, b) => {
           if (state.rankingType === 'streak') {
-            return b.currentStreak - a.currentStreak || b.totalDays - a.totalDays || a.name.localeCompare(b.name);
+            return b.currentStreak - a.currentStreak || b.workoutDays - a.workoutDays || a.name.localeCompare(b.name);
           } else {
-            return b.totalDays - a.totalDays || b.currentStreak - a.currentStreak || a.name.localeCompare(b.name);
+            return b.workoutDays - a.workoutDays || b.currentStreak - a.currentStreak || a.name.localeCompare(b.name);
           }
         });
 
@@ -610,7 +616,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 text-right">
+              <div class="flex items-center gap-3 text-right">
                 <div>
                   <div class="flex items-center justify-end gap-0.5 ${streakNumberClass}">
                     <span class="text-sm tracking-tight">${member.currentStreak}</span>
@@ -619,9 +625,14 @@
                   <span class="text-[10px] text-zinc-400 block mt-0.5">streak</span>
                 </div>
 
-                <div class="border-l border-zinc-800 pl-4">
+                <div class="border-l border-zinc-800 pl-3">
+                  <div class="text-sm font-bold text-neonGreen">${member.workoutDays}</div>
+                  <span class="text-[10px] text-zinc-500 block mt-0.5">gym days</span>
+                </div>
+
+                <div class="border-l border-zinc-800 pl-3">
                   <div class="text-sm font-bold text-zinc-300">${member.totalDays}</div>
-                  <span class="text-[10px] text-zinc-500 block mt-0.5">workouts</span>
+                  <span class="text-[10px] text-zinc-500 block mt-0.5">total days</span>
                 </div>
               </div>
             </div>
