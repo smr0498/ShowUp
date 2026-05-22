@@ -868,6 +868,12 @@
       if (!name) return;
 
       if (isMockMode) {
+        // Check for duplicate group name
+        const existing = mockDB.getGroups().find(g => g.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          UI.showToast("This group name already exists!", "error");
+          return;
+        }
         const newGroup = mockDB.createGroup(name);
         setGroupHash(newGroup.id, name);
       } else {
@@ -878,7 +884,13 @@
             .select()
             .single();
 
-          if (error) throw error;
+          if (error) {
+            if (error.code === '23505') {
+              UI.showToast("This group name already exists!", "error");
+              return;
+            }
+            throw error;
+          }
           setGroupHash(data.id, name);
         } catch (err) {
           console.error("Create group error:", err);
@@ -896,6 +908,12 @@
       if (!name || !state.groupId) return;
 
       if (isMockMode) {
+        // Check for duplicate nickname in this group
+        const existingMember = mockDB.getGroupMembers(state.groupId).find(m => m.name.toLowerCase() === name.toLowerCase());
+        if (existingMember) {
+          UI.showToast("This nickname is already taken in this group!", "error");
+          return;
+        }
         const member = mockDB.createMember(state.groupId, name);
         sessionStorage.setItem(`showup_member_${state.groupId}`, member.id);
         await fetchGroupData();
@@ -907,7 +925,13 @@
             .select()
             .single();
 
-          if (error) throw error;
+          if (error) {
+            if (error.code === '23505') {
+              UI.showToast("This nickname is already taken in this group!", "error");
+              return;
+            }
+            throw error;
+          }
           sessionStorage.setItem(`showup_member_${state.groupId}`, data.id);
           await fetchGroupData();
         } catch (err) {
