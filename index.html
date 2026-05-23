@@ -200,6 +200,10 @@
           class="relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10">
           <i data-lucide="check-circle-2" class="w-5 h-5"></i><span>I Workout'd Today!</span>
         </button>
+        <button id="yesterday-btn"
+          class="relative z-10 w-full hidden bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold rounded-xl py-3 transition-all duration-150 flex items-center justify-center gap-2 text-sm border border-zinc-700/50">
+          <i data-lucide="history" class="w-4 h-4 text-amber-400"></i><span>Forgot yesterday? Mark it now</span>
+        </button>
       </div>
 
       <!-- Leaderboard Header -->
@@ -560,12 +564,15 @@
         }
       },
 
-      updateCheckinButton(hasCheckedInToday, batch) {
+      updateCheckinButton(hasCheckedInToday, batch, hasCheckedInYesterday) {
         const btn = document.getElementById('checkin-btn');
         const statusText = document.getElementById('checkin-status-text');
         const bgAccent = document.getElementById('checkin-bg-accent');
         const card = document.getElementById('checkin-card');
+        const yesterdayBtn = document.getElementById('yesterday-btn');
         const todayStr = toLocalDate(new Date());
+        const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = toLocalDate(yesterdayDate);
 
         // Check batch status
         let batchBlocked = false;
@@ -575,24 +582,42 @@
           else if (todayStr > batch.end_date) { batchBlocked = true; blockMsg = 'This batch has ended. Leaderboard is frozen.'; }
         }
 
+        // Yesterday grace period logic:
+        // Show "Mark Yesterday" if: not batch-blocked, yesterday not checked in,
+        // and yesterday falls within the batch window
+        let showYesterday = false;
+        if (!batchBlocked && !hasCheckedInYesterday) {
+          if (batch) {
+            showYesterday = yesterdayStr >= batch.start_date && yesterdayStr <= batch.end_date;
+          } else {
+            showYesterday = true; // No batch = always allow
+          }
+        }
+
         if (batchBlocked) {
           btn.disabled = true;
           btn.className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed";
           btn.innerHTML = `<i data-lucide="lock" class="w-5 h-5 text-zinc-500"></i><span>Check-ins Closed</span>`;
           statusText.textContent = blockMsg;
           bgAccent.classList.remove('opacity-100'); bgAccent.classList.add('opacity-0');
+          yesterdayBtn.classList.add('hidden');
         } else if (hasCheckedInToday) {
           btn.disabled = true;
           btn.className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed";
           btn.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5 text-zinc-500"></i><span>Nice job! Workout Logged!</span>`;
           statusText.innerHTML = `<span class="text-neonLime font-semibold flex items-center justify-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> You marked today as completed!</span>`;
           bgAccent.classList.remove('opacity-0'); bgAccent.classList.add('opacity-100');
+          // Still show yesterday button even if today is done
+          if (showYesterday) yesterdayBtn.classList.remove('hidden');
+          else yesterdayBtn.classList.add('hidden');
         } else {
           btn.disabled = false;
           btn.className = "relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10";
           btn.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5"></i><span>I Workout'd Today!</span>`;
           statusText.textContent = "Have you hit the gym today?";
           bgAccent.classList.remove('opacity-100'); bgAccent.classList.add('opacity-0');
+          if (showYesterday) yesterdayBtn.classList.remove('hidden');
+          else yesterdayBtn.classList.add('hidden');
         }
         lucide.createIcons();
       },
@@ -780,7 +805,11 @@
         const membersWithStreaks = calculateStreaks(state.members, state.checkins, state.activeBatch);
         UI.renderBatchInfo(state.activeBatch);
         const me = membersWithStreaks.find(m => m.id === state.currentMember.id);
-        UI.updateCheckinButton(me ? me.hasCheckedInToday : false, state.activeBatch);
+        // Check if yesterday is already checked in
+        const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = toLocalDate(yesterdayDate);
+        const hasCheckedInYesterday = state.currentMember ? state.checkins.some(c => c.member_id === state.currentMember.id && c.logged_date === yesterdayStr) : false;
+        UI.updateCheckinButton(me ? me.hasCheckedInToday : false, state.activeBatch, hasCheckedInYesterday);
         UI.renderLeaderboard(membersWithStreaks);
         UI.renderBatchHistory(state.batches, state.members, state.checkins);
       }
@@ -789,21 +818,22 @@
     // ==========================================
     // ACTIONS
     // ==========================================
-    async function triggerCheckin() {
+    async function triggerCheckin(dateOverride) {
       if (!state.currentMember) return;
-      const todayStr = toLocalDate(new Date());
+      const dateStr = dateOverride || toLocalDate(new Date());
+      const isYesterday = dateOverride ? true : false;
 
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#A3E635','#22C55E','#FFFFFF'] });
 
       if (isMockMode) {
-        if (mockDB.createCheckin(state.currentMember.id, todayStr)) {
-          UI.showToast("Streak updated!"); await fetchGroupData();
+        if (mockDB.createCheckin(state.currentMember.id, dateStr)) {
+          UI.showToast(isYesterday ? "Yesterday's workout saved!" : "Streak updated!"); await fetchGroupData();
         }
       } else {
         try {
-          const { error } = await supabaseClient.from('checkins').insert([{ member_id: state.currentMember.id, logged_date: todayStr }]).select();
-          if (error) { if (error.code === '23505') UI.showToast("Already logged today!"); else throw error; }
-          else { UI.showToast("Streak updated!"); await fetchGroupData(); }
+          const { error } = await supabaseClient.from('checkins').insert([{ member_id: state.currentMember.id, logged_date: dateStr }]).select();
+          if (error) { if (error.code === '23505') UI.showToast("Already logged!"); else throw error; }
+          else { UI.showToast(isYesterday ? "Yesterday's workout saved!" : "Streak updated!"); await fetchGroupData(); }
         } catch (err) { console.error(err); UI.showToast("Check-in failed", "error"); }
       }
     }
@@ -907,7 +937,13 @@
     });
 
     // Check-in
-    document.getElementById('checkin-btn').addEventListener('click', triggerCheckin);
+    document.getElementById('checkin-btn').addEventListener('click', () => triggerCheckin());
+
+    // Yesterday grace period
+    document.getElementById('yesterday-btn').addEventListener('click', () => {
+      const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      triggerCheckin(toLocalDate(yesterdayDate));
+    });
 
     // Share
     document.getElementById('share-btn').addEventListener('click', () => {
