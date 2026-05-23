@@ -4,11 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShowUp — Gym Streak Tracker</title>
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -23,44 +21,35 @@
             neonGreen: '#22C55E',
             streakOrange: '#F97316',
           },
-          fontFamily: {
-            sans: ['Outfit', 'Inter', 'sans-serif'],
-          }
+          fontFamily: { sans: ['Outfit', 'Inter', 'sans-serif'] }
         }
       }
     }
   </script>
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Canvas Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .glass {
-      background: rgba(24, 24, 27, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-    .neon-glow {
-      box-shadow: 0 0 20px rgba(163, 230, 53, 0.15);
-    }
-    .orange-glow {
-      box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
-    }
+    .glass { background: rgba(24,24,27,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .neon-glow { box-shadow: 0 0 20px rgba(163,230,53,0.15); }
+    .cal-day { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+    .cal-day:hover { background: rgba(163,230,53,0.1); }
+    .cal-day.selected { background: rgba(163,230,53,0.2); border: 1px solid rgba(163,230,53,0.4); color: #A3E635; font-weight: 700; }
+    .cal-day.in-range { background: rgba(163,230,53,0.08); }
+    .cal-day.disabled { opacity: 0.3; pointer-events: none; }
+    .cal-day.today { border: 1px solid rgba(163,230,53,0.3); }
   </style>
 </head>
 <body class="bg-background text-gray-100 min-h-screen flex flex-col font-sans select-none antialiased">
 
-  <!-- Config Warning Banner (Visible only in local mock mode) -->
+  <!-- Demo Banner -->
   <div id="demo-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-xs px-4 py-2 text-center flex items-center justify-center gap-2">
     <i data-lucide="info" class="w-4 h-4 text-amber-400"></i>
-    <span><strong>Demo Mode:</strong> Data is stored in this browser only. To test with a friend, open two regular tabs (not Incognito). Connect Supabase to go live.</span>
+    <span><strong>Demo Mode:</strong> Data is stored in this browser only. Connect Supabase to go live.</span>
   </div>
 
-  <!-- Main Container -->
   <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-md w-full mx-auto">
-    
+
     <!-- HEADER -->
     <header class="w-full text-center py-6 flex items-center justify-center gap-2">
       <div class="bg-neonLime/10 p-2 rounded-xl border border-neonLime/20">
@@ -69,61 +58,88 @@
       <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">ShowUp</h1>
     </header>
 
-    <!-- VIEW 1: CREATE GROUP -->
+    <!-- VIEW: CREATE GROUP -->
     <section id="view-create-group" class="w-full hidden">
-      <div class="glass border border-zinc-850 rounded-3xl p-6 shadow-xl w-full text-center flex flex-col gap-6">
+      <div class="glass border border-zinc-800 rounded-3xl p-6 shadow-xl w-full text-center flex flex-col gap-6">
         <div>
           <h2 class="text-xl font-bold tracking-tight mb-2">Assemble Your Gym Squad</h2>
-          <p class="text-gray-400 text-sm">Create a group, invite your friends, track your streaks, and climb the leaderboard.</p>
+          <p class="text-gray-400 text-sm">Create a group, set a batch window, and invite your friends.</p>
         </div>
-
         <form id="create-group-form" class="flex flex-col gap-4 text-left">
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Group Name</label>
-            <input 
-              type="text" 
-              id="group-name-input" 
-              placeholder="e.g., Early Birds, Beast Mode" 
-              required
-              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neonLime transition-all text-white"
-            >
+            <input type="text" id="group-name-input" placeholder="e.g., Early Birds, Beast Mode" required
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neonLime transition-all text-white">
           </div>
-          <button 
-            type="submit" 
-            class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2"
-          >
-            Create Group
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          <button type="submit"
+            class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2">
+            Create Group <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </form>
       </div>
     </section>
 
-    <!-- VIEW 2: JOIN GROUP -->
+    <!-- VIEW: SET BATCH DATES (Creator only, after group creation) -->
+    <section id="view-set-batch" class="w-full hidden">
+      <div class="glass border border-zinc-800 rounded-3xl p-6 shadow-xl w-full flex flex-col gap-5">
+        <div class="text-center">
+          <h2 class="text-xl font-bold tracking-tight mb-1">Set Batch Dates</h2>
+          <p class="text-gray-400 text-sm">Pick a start and end date for this batch. Members can only check in within this window.</p>
+        </div>
+
+        <!-- Calendar -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <button id="cal-prev" class="text-zinc-400 hover:text-white p-1"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="cal-month-label" class="text-sm font-bold text-white"></span>
+            <button id="cal-next" class="text-zinc-400 hover:text-white p-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center mb-2">
+            <span class="text-[10px] text-zinc-500 font-semibold">Su</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">Mo</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">Tu</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">We</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">Th</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">Fr</span>
+            <span class="text-[10px] text-zinc-500 font-semibold">Sa</span>
+          </div>
+          <div id="cal-grid" class="grid grid-cols-7 gap-1"></div>
+        </div>
+
+        <div class="flex gap-3">
+          <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center">
+            <p class="text-[10px] text-zinc-500 uppercase font-semibold mb-1">Start</p>
+            <p id="batch-start-display" class="text-sm font-bold text-white">Select</p>
+          </div>
+          <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center">
+            <p class="text-[10px] text-zinc-500 uppercase font-semibold mb-1">End</p>
+            <p id="batch-end-display" class="text-sm font-bold text-white">Select</p>
+          </div>
+        </div>
+
+        <button id="save-batch-btn" disabled
+          class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
+          Save Batch & Continue <i data-lucide="check" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW: JOIN GROUP -->
     <section id="view-join-group" class="w-full hidden">
       <div class="glass border border-zinc-800/40 rounded-3xl p-6 shadow-xl w-full text-center flex flex-col gap-6">
         <div>
           <h2 class="text-xl font-bold tracking-tight mb-2">Join Gym Group</h2>
           <p id="join-group-subtitle" class="text-gray-400 text-sm">You have been invited to join a workout group.</p>
         </div>
-
         <form id="join-group-form" class="flex flex-col gap-4 text-left">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 font-medium">Your Nickname</label>
-            <input 
-              type="text" 
-              id="join-username-input" 
-              placeholder="e.g., Alex, FitJim" 
-              required
-              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neonLime transition-all text-white"
-            >
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Your Nickname</label>
+            <input type="text" id="join-username-input" placeholder="e.g., Alex, FitJim" required
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neonLime transition-all text-white">
           </div>
-          <button 
-            type="submit" 
-            class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2"
-          >
-            Join Squad
-            <i data-lucide="plus" class="w-4 h-4"></i>
+          <button type="submit"
+            class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2">
+            Join Squad <i data-lucide="plus" class="w-4 h-4"></i>
           </button>
         </form>
       </div>
@@ -137,59 +153,52 @@
         </div>
         <div>
           <h2 class="text-xl font-bold tracking-tight mb-2 text-white">Group Not Found</h2>
-          <p id="not-found-reason" class="text-gray-400 text-sm">This group link doesn't match any group in your browser's local storage.</p>
+          <p id="not-found-reason" class="text-gray-400 text-sm">This group link is invalid or the group has been deleted.</p>
         </div>
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 text-left text-xs text-zinc-400 flex flex-col gap-2">
-          <p class="font-semibold text-zinc-300">Why did this happen?</p>
-          <ul class="list-disc pl-4 flex flex-col gap-1">
-            <li><strong>Incognito / different browser:</strong> In Demo Mode, data is stored per browser. Incognito windows have their own empty storage.</li>
-            <li><strong>Link from a friend:</strong> Without a live database (Supabase), groups only exist in the browser that created them.</li>
-          </ul>
-          <p class="mt-1">To test locally, open a <strong class="text-zinc-300">second regular tab</strong> (not Incognito) with the same link.</p>
-        </div>
-        <button
-          onclick="window.location.hash=''"
-          class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2"
-        >
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          Create Your Own Group
+        <button onclick="window.location.hash=''"
+          class="w-full bg-neonLime text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] transition-transform duration-200 shadow-lg shadow-neonLime/10 flex items-center justify-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> Create Your Own Group
         </button>
       </div>
     </section>
 
-    <!-- VIEW 3: DASHBOARD -->
+    <!-- VIEW: DASHBOARD -->
     <section id="view-dashboard" class="w-full hidden flex flex-col gap-4">
-      
-      <!-- Group Title & Share Link -->
+
+      <!-- Group Title & Share -->
       <div class="glass border border-zinc-800/40 rounded-3xl p-5 flex items-center justify-between shadow-xl">
         <div>
-          <h2 id="dashboard-group-name" class="font-bold text-lg leading-tight text-white">Squad Name</h2>
+          <h2 id="dashboard-group-name" class="font-bold text-lg leading-tight text-white">Squad</h2>
           <p class="text-xs text-gray-400">Streak Leaderboard</p>
         </div>
-        <button 
-          id="share-btn" 
-          class="flex items-center gap-1.5 bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-zinc-700/50"
-        >
-          <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-          Invite Friends
+        <button id="share-btn"
+          class="flex items-center gap-1.5 bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-zinc-700/50">
+          <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Invite Friends
         </button>
       </div>
 
-      <!-- Action: Check In -->
-      <div class="glass border border-zinc-800/40 rounded-3xl p-6 text-center flex flex-col items-center gap-4 relative overflow-hidden">
+      <!-- Batch Info Bar -->
+      <div id="batch-info-bar" class="glass border border-zinc-800/40 rounded-2xl p-4 flex items-center justify-between hidden">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calendar-range" class="w-4 h-4 text-neonLime"></i>
+          <div>
+            <p class="text-xs font-bold text-white"><span id="batch-label">Batch</span></p>
+            <p id="batch-dates-display" class="text-[10px] text-zinc-400">May 26 — Jun 1</p>
+          </div>
+        </div>
+        <div id="batch-status-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full">Active</div>
+      </div>
+
+      <!-- Check In -->
+      <div id="checkin-card" class="glass border border-zinc-800/40 rounded-3xl p-6 text-center flex flex-col items-center gap-4 relative overflow-hidden">
         <div id="checkin-bg-accent" class="absolute inset-0 bg-gradient-to-t from-neonLime/5 to-transparent pointer-events-none opacity-0 transition-opacity duration-300"></div>
-        
         <div class="relative z-10 w-full">
           <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Today's Attendance</p>
           <h3 id="checkin-status-text" class="text-sm font-semibold text-gray-300">Have you hit the gym today?</h3>
         </div>
-
-        <button 
-          id="checkin-btn" 
-          class="relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10"
-        >
-          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-          <span>I Workout'd Today!</span>
+        <button id="checkin-btn"
+          class="relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i><span>I Workout'd Today!</span>
         </button>
       </div>
 
@@ -198,13 +207,17 @@
         <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Leaderboard</h3>
         <div class="flex bg-zinc-900 border border-zinc-800 p-0.5 rounded-lg text-[11px] font-semibold text-zinc-400">
           <button id="rank-streak-btn" class="px-2.5 py-1 rounded bg-zinc-800 text-white font-bold transition-all">Streaks</button>
-          <button id="rank-total-btn" class="px-2.5 py-1 rounded transition-all">Total Days</button>
+          <button id="rank-total-btn" class="px-2.5 py-1 rounded transition-all">Gym Days</button>
         </div>
       </div>
 
       <!-- Leaderboard List -->
-      <div id="leaderboard-list" class="flex flex-col gap-2">
-        <!-- Rendered Dynamically -->
+      <div id="leaderboard-list" class="flex flex-col gap-2"></div>
+
+      <!-- Batch History -->
+      <div id="batch-history-section" class="hidden mt-4">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400 px-1 mb-2">Past Batches</h3>
+        <div id="batch-history-list" class="flex flex-col gap-2"></div>
       </div>
     </section>
 
@@ -212,13 +225,10 @@
 
   <!-- FOOTER -->
   <footer class="w-full text-center py-6 text-xs text-gray-500 relative flex flex-col gap-2 items-center">
-    <div>ShowUp &copy; 2026. Made with ❤️ for fitness.</div>
-    <button 
-      id="feedback-trigger-btn"
-      class="text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors font-medium hover:underline text-[11px]"
-    >
-      <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
-      Report Bug / Submit Feedback
+    <div>ShowUp &copy; 2026. Made with love for fitness.</div>
+    <button id="feedback-trigger-btn"
+      class="text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors font-medium hover:underline text-[11px]">
+      <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Report Bug / Submit Feedback
     </button>
   </footer>
 
@@ -228,843 +238,741 @@
       <button id="feedback-close-btn" class="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
-      
       <div>
         <h3 class="text-lg font-bold text-white mb-1">Feedback & Support</h3>
         <p class="text-xs text-zinc-400">Experiencing issues? Tell your development team.</p>
       </div>
-
       <form id="feedback-form" class="flex flex-col gap-4">
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Type</label>
           <select id="feedback-type" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-neonLime">
-            <option value="bug">Bug / Not Working 🐛</option>
-            <option value="feature">Feature Request 💡</option>
-            <option value="other">General Comment 💬</option>
+            <option value="bug">Bug / Not Working</option>
+            <option value="feature">Feature Request</option>
+            <option value="other">General Comment</option>
           </select>
         </div>
-
         <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 font-medium">Description</label>
-          <textarea 
-            id="feedback-message" 
-            rows="3" 
-            placeholder="Tell us what's wrong or what you want..." 
-            required
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-neonLime transition-all resize-none"
-          ></textarea>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Description</label>
+          <textarea id="feedback-message" rows="3" placeholder="Tell us what's wrong or what you want..." required
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-neonLime transition-all resize-none"></textarea>
         </div>
-
-        <button 
-          type="submit" 
-          class="w-full bg-neonLime text-black font-semibold rounded-xl py-2.5 text-xs hover:scale-[1.02] transition-transform duration-200 flex items-center justify-center gap-1.5"
-        >
-          Submit Feedback
-          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+        <button type="submit"
+          class="w-full bg-neonLime text-black font-semibold rounded-xl py-2.5 text-xs hover:scale-[1.02] transition-transform duration-200 flex items-center justify-center gap-1.5">
+          Submit Feedback <i data-lucide="send" class="w-3.5 h-3.5"></i>
         </button>
       </form>
-
-      <!-- Submitted Tickets List -->
-      <div id="tickets-section" class="hidden border-t border-zinc-800/60 pt-4">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Submitted Tickets</h4>
-        <div id="tickets-list" class="flex flex-col gap-2 max-h-40 overflow-y-auto"></div>
-      </div>
-
-      <button
-        id="toggle-tickets-btn"
-        type="button"
-        class="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors font-medium flex items-center gap-1 mx-auto"
-      >
-        <i data-lucide="history" class="w-3 h-3"></i>
-        <span>View submitted tickets</span>
-      </button>
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION -->
+  <!-- TOAST -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 glass border border-zinc-800/80 px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-2xl opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-50 text-white">
     <i id="toast-icon" data-lucide="check" class="w-4 h-4 text-neonLime"></i>
-    <span id="toast-message">Copied invite link!</span>
+    <span id="toast-message">Done!</span>
   </div>
 
-  <!-- JAVASCRIPT APP CORE -->
   <script>
     // ==========================================
-    // ⚙️ SUPABASE CONFIGURATION
+    // CONFIG
     // ==========================================
-    // Paste your Supabase credentials here to make it online/real-time for friends!
     const SUPABASE_URL = "https://wvdplxcldxirnecyhfkx.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D7xJu5d_J6273WLo1iHXxQ_7G_Fb7W3"; 
+    const SUPABASE_KEY = "sb_publishable_D7xJu5d_J6273WLo1iHXxQ_7G_Fb7W3";
 
     let supabaseClient = null;
     let isMockMode = true;
 
-    // Check if configuration is active
     if (SUPABASE_URL && SUPABASE_KEY) {
       try {
-        // Use the global 'supabase' object from CDN to build client
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         isMockMode = false;
         document.getElementById("demo-banner").classList.add("hidden");
       } catch (err) {
-        console.error("Failed to initialize Supabase. Running in mock mode:", err);
+        console.error("Supabase init failed:", err);
       }
     }
 
     // ==========================================
-    // 🛡️ UUID GENERATOR (Secure & File:// Fallback)
+    // HELPERS
     // ==========================================
     function generateUUID() {
-      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
-      }
-      // Fallback generator for non-secure contexts (file:// protocol)
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
       });
     }
 
-    // ==========================================
-    // 🛠️ MOCK DATABASE ENGINE (localStorage)
-    // ==========================================
-    // Serves as local fallback when Supabase is not connected
-    const mockDB = {
-      getGroups() {
-        return JSON.parse(localStorage.getItem('showup_groups') || '[]');
-      },
-      getMembers() {
-        return JSON.parse(localStorage.getItem('showup_members') || '[]');
-      },
-      getCheckins() {
-        return JSON.parse(localStorage.getItem('showup_checkins') || '[]');
-      },
-      getTickets() {
-        return JSON.parse(localStorage.getItem('showup_support_tickets') || '[]');
-      },
-      save(key, data) {
-        localStorage.setItem(key, JSON.stringify(data));
-        // Broadcast the update so other tabs on this machine update instantly
-        window.dispatchEvent(new Event('storage'));
-      },
-      createGroup(name) {
-        const id = generateUUID();
-        const groups = this.getGroups();
-        const newGroup = { id, name, created_at: new Date().toISOString() };
-        groups.push(newGroup);
-        this.save('showup_groups', groups);
-        return newGroup;
-      },
-      getGroup(id) {
-        return this.getGroups().find(g => g.id === id) || null;
-      },
-      createMember(groupId, name) {
-        const id = generateUUID();
-        const members = this.getMembers();
-        const newMember = { id, group_id: groupId, name, created_at: new Date().toISOString() };
-        members.push(newMember);
-        this.save('showup_members', members);
-        return newMember;
-      },
-      getGroupMembers(groupId) {
-        return this.getMembers().filter(m => m.group_id === groupId);
-      },
-      createCheckin(memberId, loggedDate) {
-        const checkins = this.getCheckins();
-        // Prevent double entries for the same day
-        const exists = checkins.some(c => c.member_id === memberId && c.logged_date === loggedDate);
-        if (exists) return null;
-
-        const newCheckin = {
-          id: generateUUID(),
-          member_id: memberId,
-          logged_date: loggedDate,
-          created_at: new Date().toISOString()
-        };
-        checkins.push(newCheckin);
-        this.save('showup_checkins', checkins);
-        return newCheckin;
-      },
-      getGroupCheckins(groupId) {
-        const members = this.getGroupMembers(groupId);
-        const memberIds = members.map(m => m.id);
-        return this.getCheckins().filter(c => memberIds.includes(c.member_id));
-      },
-      createTicket(memberId, groupId, type, message) {
-        const tickets = this.getTickets();
-        const newTicket = {
-          id: generateUUID(),
-          member_id: memberId,
-          group_id: groupId,
-          type,
-          message,
-          created_at: new Date().toISOString()
-        };
-        tickets.push(newTicket);
-        this.save('showup_support_tickets', tickets);
-        return newTicket;
-      }
-    };
-
-    // ==========================================
-    // 🧠 CORE STATE & ROUTING
-    // ==========================================
-    let state = {
-      groupId: null,
-      currentMember: null, // { id, name, group_id }
-      group: null,
-      members: [],
-      checkins: [],
-      rankingType: 'streak' // 'streak' or 'total'
-    };
-
-    // Router handles showing and hiding view nodes
-    const router = {
-      views: {
-        createGroup: document.getElementById('view-create-group'),
-        joinGroup: document.getElementById('view-join-group'),
-        notFound: document.getElementById('view-not-found'),
-        dashboard: document.getElementById('view-dashboard')
-      },
-      show(activeViewName) {
-        Object.entries(this.views).forEach(([name, element]) => {
-          if (name === activeViewName) {
-            element.classList.remove('hidden');
-          } else {
-            element.classList.add('hidden');
-          }
-        });
-      }
-    };
-
     function parseHash() {
-      const hash = window.location.hash.slice(1);
-      const params = new URLSearchParams(hash);
-      return {
-        groupId: params.get('group'),
-        groupName: params.get('name') ? decodeURIComponent(params.get('name')) : null
-      };
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      return { groupId: params.get('group'), groupName: params.get('name') ? decodeURIComponent(params.get('name')) : null };
     }
 
     function setGroupHash(groupId, groupName) {
       window.location.hash = `group=${groupId}&name=${encodeURIComponent(groupName)}`;
     }
 
-    // Helper to get today's date formatted local to browser YYYY-MM-DD
-    function getTodayLocalDate() {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    function toLocalDate(d) {
+      const dt = d instanceof Date ? d : new Date();
+      return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
     }
 
-    // Helper to get yesterday's date formatted local to browser YYYY-MM-DD
-    function getYesterdayLocalDate() {
-      const d = new Date();
-      d.setDate(d.getDate() - 1);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    function formatDateShort(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function daysBetween(startStr, endStr) {
+      const s = new Date(startStr + 'T00:00:00');
+      const e = new Date(endStr + 'T00:00:00');
+      return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
     }
 
     // ==========================================
-    // 🔥 STREAK MATHEMATIC CALCULATOR
+    // MOCK DB
     // ==========================================
-    function calculateStreaks(members, checkins) {
-      const todayStr = getTodayLocalDate();
-      const yesterdayStr = getYesterdayLocalDate();
+    const mockDB = {
+      _get(k) { return JSON.parse(localStorage.getItem(k) || '[]'); },
+      _set(k, v) { localStorage.setItem(k, JSON.stringify(v)); window.dispatchEvent(new Event('storage')); },
+      getGroups() { return this._get('showup_groups'); },
+      getGroup(id) { return this.getGroups().find(g => g.id === id) || null; },
+      createGroup(name, creatorMemberId) {
+        const g = { id: generateUUID(), name, creator_member_id: creatorMemberId || null, created_at: new Date().toISOString() };
+        const groups = this.getGroups(); groups.push(g); this._set('showup_groups', groups); return g;
+      },
+      updateGroup(id, updates) {
+        const groups = this.getGroups(); const i = groups.findIndex(g => g.id === id);
+        if (i >= 0) { Object.assign(groups[i], updates); this._set('showup_groups', groups); } return groups[i];
+      },
+      getMembers() { return this._get('showup_members'); },
+      getGroupMembers(gid) { return this.getMembers().filter(m => m.group_id === gid); },
+      createMember(gid, name) {
+        const m = { id: generateUUID(), group_id: gid, name, created_at: new Date().toISOString() };
+        const members = this.getMembers(); members.push(m); this._set('showup_members', members); return m;
+      },
+      getCheckins() { return this._get('showup_checkins'); },
+      getGroupCheckins(gid) {
+        const mids = this.getGroupMembers(gid).map(m => m.id);
+        return this.getCheckins().filter(c => mids.includes(c.member_id));
+      },
+      createCheckin(mid, date) {
+        const checkins = this.getCheckins();
+        if (checkins.some(c => c.member_id === mid && c.logged_date === date)) return null;
+        const c = { id: generateUUID(), member_id: mid, logged_date: date, created_at: new Date().toISOString() };
+        checkins.push(c); this._set('showup_checkins', checkins); return c;
+      },
+      getBatches() { return this._get('showup_batches'); },
+      getGroupBatches(gid) { return this.getBatches().filter(b => b.group_id === gid); },
+      createBatch(gid, startDate, endDate) {
+        const b = { id: generateUUID(), group_id: gid, start_date: startDate, end_date: endDate, created_at: new Date().toISOString() };
+        const batches = this.getBatches(); batches.push(b); this._set('showup_batches', batches); return b;
+      },
+      createTicket(mid, gid, type, msg) {
+        const t = { id: generateUUID(), member_id: mid, group_id: gid, type, message: msg, created_at: new Date().toISOString() };
+        const tickets = this._get('showup_support_tickets'); tickets.push(t); this._set('showup_support_tickets', tickets); return t;
+      }
+    };
+
+    // ==========================================
+    // STATE
+    // ==========================================
+    let state = {
+      groupId: null, group: null, currentMember: null,
+      members: [], checkins: [], batches: [],
+      activeBatch: null, rankingType: 'streak',
+      calMonth: new Date().getMonth(), calYear: new Date().getFullYear(),
+      batchStart: null, batchEnd: null, isCreator: false
+    };
+
+    // ==========================================
+    // ROUTER
+    // ==========================================
+    const router = {
+      views: {
+        createGroup: document.getElementById('view-create-group'),
+        setBatch: document.getElementById('view-set-batch'),
+        joinGroup: document.getElementById('view-join-group'),
+        notFound: document.getElementById('view-not-found'),
+        dashboard: document.getElementById('view-dashboard')
+      },
+      show(name) {
+        Object.entries(this.views).forEach(([n, el]) => {
+          if (n === name) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        });
+      }
+    };
+
+    // ==========================================
+    // CALENDAR
+    // ==========================================
+    function renderCalendar() {
+      const grid = document.getElementById('cal-grid');
+      const label = document.getElementById('cal-month-label');
+      grid.innerHTML = '';
+      const year = state.calYear, month = state.calMonth;
+      const todayStr = toLocalDate(new Date());
+      label.textContent = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Empty cells for days before the 1st
+      for (let i = 0; i < firstDay; i++) {
+        grid.insertAdjacentHTML('beforeend', '<div></div>');
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isPast = dateStr < todayStr;
+        let classes = 'cal-day text-zinc-300';
+        if (isPast) classes += ' disabled';
+        if (dateStr === todayStr) classes += ' today';
+        if (dateStr === state.batchStart || dateStr === state.batchEnd) classes += ' selected';
+        else if (state.batchStart && state.batchEnd && dateStr > state.batchStart && dateStr < state.batchEnd) classes += ' in-range';
+
+        grid.insertAdjacentHTML('beforeend', `<div class="${classes}" data-date="${dateStr}">${d}</div>`);
+      }
+
+      // Click handler
+      grid.querySelectorAll('.cal-day:not(.disabled)').forEach(el => {
+        el.addEventListener('click', () => {
+          const date = el.dataset.date;
+          if (!state.batchStart || (state.batchStart && state.batchEnd)) {
+            // Start new selection
+            state.batchStart = date;
+            state.batchEnd = null;
+          } else if (date > state.batchStart) {
+            state.batchEnd = date;
+          } else {
+            state.batchStart = date;
+            state.batchEnd = null;
+          }
+          updateBatchDisplay();
+          renderCalendar();
+        });
+      });
+    }
+
+    function updateBatchDisplay() {
+      document.getElementById('batch-start-display').textContent = state.batchStart ? formatDateShort(state.batchStart) : 'Select';
+      document.getElementById('batch-end-display').textContent = state.batchEnd ? formatDateShort(state.batchEnd) : 'Select';
+      document.getElementById('save-batch-btn').disabled = !(state.batchStart && state.batchEnd);
+    }
+
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      state.calMonth--;
+      if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+      renderCalendar();
+    });
+
+    document.getElementById('cal-next').addEventListener('click', () => {
+      state.calMonth++;
+      if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+      renderCalendar();
+    });
+
+    // ==========================================
+    // STREAK CALCULATOR (batch-scoped)
+    // ==========================================
+    function calculateStreaks(members, checkins, batch) {
+      const todayStr = toLocalDate(new Date());
+      const batchStart = batch ? batch.start_date : null;
+      const batchEnd = batch ? batch.end_date : null;
+      const effectiveEnd = batchEnd && batchEnd < todayStr ? batchEnd : todayStr;
 
       return members.map(member => {
-        // Get all check-ins for this member
-        const memberCheckins = checkins
+        let memberCheckins = checkins
           .filter(c => c.member_id === member.id)
           .map(c => c.logged_date);
 
-        // Sort descending (most recent first) and remove duplicates
+        // Scope to batch window
+        if (batchStart && batchEnd) {
+          memberCheckins = memberCheckins.filter(d => d >= batchStart && d <= batchEnd);
+        }
+
         const uniqueDates = [...new Set(memberCheckins)].sort((a, b) => b.localeCompare(a));
         const workoutDays = uniqueDates.length;
+        const totalDays = batchStart ? daysBetween(batchStart, effectiveEnd) : 1;
 
-        // Total days = calendar days since member joined (inclusive of today)
-        const joinDate = new Date(member.created_at);
-        const today = new Date();
-        const totalDays = Math.max(1, Math.floor((today - joinDate) / (1000 * 60 * 60 * 24)) + 1);
-        
         let currentStreak = 0;
-        let hasCheckedInToday = uniqueDates.includes(todayStr);
-        let hasCheckedInYesterday = uniqueDates.includes(yesterdayStr);
+        const hasCheckedInToday = uniqueDates.includes(todayStr);
 
-        // Calculate active streak
-        if (hasCheckedInToday || hasCheckedInYesterday) {
+        // Calculate streak (consecutive days ending at today or yesterday)
+        if (hasCheckedInToday || uniqueDates.includes(toLocalDate((() => { const d = new Date(); d.setDate(d.getDate()-1); return d; })()))) {
           let checkDate = new Date();
-          // If they haven't checked in today but did check in yesterday, count from yesterday
-          if (!hasCheckedInToday && hasCheckedInYesterday) {
-            checkDate.setDate(checkDate.getDate() - 1);
-          }
-
+          if (!hasCheckedInToday) checkDate.setDate(checkDate.getDate() - 1);
           while (true) {
-            const checkStr = checkDate.toISOString().split('T')[0];
+            const checkStr = toLocalDate(checkDate);
+            if (batchStart && checkStr < batchStart) break;
             if (uniqueDates.includes(checkStr)) {
               currentStreak++;
               checkDate.setDate(checkDate.getDate() - 1);
-            } else {
-              break;
-            }
+            } else break;
           }
         }
 
-        return {
-          ...member,
-          currentStreak,
-          totalDays,
-          workoutDays,
-          hasCheckedInToday
-        };
+        return { ...member, currentStreak, totalDays, workoutDays, hasCheckedInToday };
       });
     }
 
     // ==========================================
-    // 🖥️ UI CONTROLLER
+    // UI
     // ==========================================
     const UI = {
       toastTimeout: null,
-
-      showToast(message, type = 'success') {
+      showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
-
-        toastMessage.innerText = message;
-        if (type === 'success') {
-          toastIcon.setAttribute('data-lucide', 'check-circle');
-          toastIcon.className = 'w-4 h-4 text-neonLime';
-        } else {
-          toastIcon.setAttribute('data-lucide', 'alert-circle');
-          toastIcon.className = 'w-4 h-4 text-red-400';
-        }
+        const tmsg = document.getElementById('toast-message');
+        const ticon = document.getElementById('toast-icon');
+        tmsg.innerText = msg;
+        ticon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+        ticon.className = `w-4 h-4 ${type === 'success' ? 'text-neonLime' : 'text-red-400'}`;
         lucide.createIcons();
-
-        toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-        toast.classList.add('opacity-100', 'translate-y-0');
-
+        toast.classList.remove('opacity-0','translate-y-4','pointer-events-none');
+        toast.classList.add('opacity-100','translate-y-0');
         clearTimeout(this.toastTimeout);
         this.toastTimeout = setTimeout(() => {
-          toast.classList.remove('opacity-100', 'translate-y-0');
-          toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+          toast.classList.remove('opacity-100','translate-y-0');
+          toast.classList.add('opacity-0','translate-y-4','pointer-events-none');
         }, 3000);
+      },
+
+      renderBatchInfo(batch) {
+        const bar = document.getElementById('batch-info-bar');
+        if (!batch) { bar.classList.add('hidden'); return; }
+        bar.classList.remove('hidden');
+        const todayStr = toLocalDate(new Date());
+        const isActive = todayStr >= batch.start_date && todayStr <= batch.end_date;
+        const isUpcoming = todayStr < batch.start_date;
+        const isExpired = todayStr > batch.end_date;
+
+        document.getElementById('batch-dates-display').textContent = `${formatDateShort(batch.start_date)} — ${formatDateShort(batch.end_date)}`;
+        const badge = document.getElementById('batch-status-badge');
+
+        if (isActive) {
+          badge.textContent = 'Active';
+          badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-neonLime/10 text-neonLime border border-neonLime/20';
+        } else if (isUpcoming) {
+          badge.textContent = 'Upcoming';
+          badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20';
+        } else {
+          badge.textContent = 'Ended';
+          badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20';
+        }
+      },
+
+      updateCheckinButton(hasCheckedInToday, batch) {
+        const btn = document.getElementById('checkin-btn');
+        const statusText = document.getElementById('checkin-status-text');
+        const bgAccent = document.getElementById('checkin-bg-accent');
+        const card = document.getElementById('checkin-card');
+        const todayStr = toLocalDate(new Date());
+
+        // Check batch status
+        let batchBlocked = false;
+        let blockMsg = '';
+        if (batch) {
+          if (todayStr < batch.start_date) { batchBlocked = true; blockMsg = `Batch starts ${formatDateShort(batch.start_date)}. Check back then!`; }
+          else if (todayStr > batch.end_date) { batchBlocked = true; blockMsg = 'This batch has ended. Leaderboard is frozen.'; }
+        }
+
+        if (batchBlocked) {
+          btn.disabled = true;
+          btn.className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed";
+          btn.innerHTML = `<i data-lucide="lock" class="w-5 h-5 text-zinc-500"></i><span>Check-ins Closed</span>`;
+          statusText.textContent = blockMsg;
+          bgAccent.classList.remove('opacity-100'); bgAccent.classList.add('opacity-0');
+        } else if (hasCheckedInToday) {
+          btn.disabled = true;
+          btn.className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed";
+          btn.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5 text-zinc-500"></i><span>Nice job! Workout Logged!</span>`;
+          statusText.innerHTML = `<span class="text-neonLime font-semibold flex items-center justify-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> You marked today as completed!</span>`;
+          bgAccent.classList.remove('opacity-0'); bgAccent.classList.add('opacity-100');
+        } else {
+          btn.disabled = false;
+          btn.className = "relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10";
+          btn.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5"></i><span>I Workout'd Today!</span>`;
+          statusText.textContent = "Have you hit the gym today?";
+          bgAccent.classList.remove('opacity-100'); bgAccent.classList.add('opacity-0');
+        }
+        lucide.createIcons();
       },
 
       renderLeaderboard(membersWithStreaks) {
         const container = document.getElementById('leaderboard-list');
         container.innerHTML = '';
-
         if (membersWithStreaks.length === 0) {
-          container.innerHTML = `
-            <div class="text-center py-8 text-zinc-500 text-xs border border-dashed border-zinc-800 rounded-3xl">
-              No members in this squad yet. Send the invite link!
-            </div>
-          `;
+          container.innerHTML = '<div class="text-center py-8 text-zinc-500 text-xs border border-dashed border-zinc-800 rounded-3xl">No members yet. Send the invite link!</div>';
           return;
         }
-
-        // Sort based on selected state
         const sorted = [...membersWithStreaks].sort((a, b) => {
-          if (state.rankingType === 'streak') {
-            return b.currentStreak - a.currentStreak || b.workoutDays - a.workoutDays || a.name.localeCompare(b.name);
-          } else {
-            return b.workoutDays - a.workoutDays || b.currentStreak - a.currentStreak || a.name.localeCompare(b.name);
-          }
+          return state.rankingType === 'streak'
+            ? (b.currentStreak - a.currentStreak || b.workoutDays - a.workoutDays || a.name.localeCompare(b.name))
+            : (b.workoutDays - a.workoutDays || b.currentStreak - a.currentStreak || a.name.localeCompare(b.name));
         });
 
         sorted.forEach((member, index) => {
-          const isCurrentUser = state.currentMember && member.id === state.currentMember.id;
+          const isMe = state.currentMember && member.id === state.currentMember.id;
           const rank = index + 1;
-          
-          let rankBadge = `<span class="w-5 h-5 flex items-center justify-center text-xs font-bold text-zinc-400">${rank}</span>`;
-          if (rank === 1) {
-            rankBadge = `<div class="bg-amber-500/10 border border-amber-500/20 w-6 h-6 rounded-lg flex items-center justify-center"><i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400 fill-amber-400/20"></i></div>`;
-          } else if (rank === 2) {
-            rankBadge = `<div class="bg-zinc-400/10 border border-zinc-400/20 w-6 h-6 rounded-lg flex items-center justify-center"><span class="text-xs font-bold text-zinc-300">2</span></div>`;
-          } else if (rank === 3) {
-            rankBadge = `<div class="bg-amber-800/10 border border-amber-800/20 w-6 h-6 rounded-lg flex items-center justify-center"><span class="text-xs font-bold text-amber-600">3</span></div>`;
-          }
+          let badge = `<span class="w-5 h-5 flex items-center justify-center text-xs font-bold text-zinc-400">${rank}</span>`;
+          if (rank === 1) badge = `<div class="bg-amber-500/10 border border-amber-500/20 w-6 h-6 rounded-lg flex items-center justify-center"><i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400 fill-amber-400/20"></i></div>`;
+          else if (rank === 2) badge = `<div class="bg-zinc-400/10 border border-zinc-400/20 w-6 h-6 rounded-lg flex items-center justify-center"><span class="text-xs font-bold text-zinc-300">2</span></div>`;
+          else if (rank === 3) badge = `<div class="bg-amber-800/10 border border-amber-800/20 w-6 h-6 rounded-lg flex items-center justify-center"><span class="text-xs font-bold text-amber-600">3</span></div>`;
 
-          const cardClass = isCurrentUser 
-            ? 'border-neonLime/30 bg-zinc-900/60 neon-glow' 
-            : 'border-zinc-800/40 hover:border-zinc-700/40 bg-zinc-900/30';
-
-          const todayActivity = member.hasCheckedInToday
+          const cardCls = isMe ? 'border-neonLime/30 bg-zinc-900/60 neon-glow' : 'border-zinc-800/40 hover:border-zinc-700/40 bg-zinc-900/30';
+          const activity = member.hasCheckedInToday
             ? `<div class="flex items-center gap-1 text-[10px] font-bold text-neonLime bg-neonLime/5 border border-neonLime/10 px-2 py-0.5 rounded-full"><i data-lucide="check" class="w-2.5 h-2.5"></i>Done</div>`
             : `<div class="text-[10px] font-medium text-zinc-500 border border-zinc-800/50 px-2 py-0.5 rounded-full">Pending</div>`;
-
-          const streakNumberClass = member.currentStreak > 0 ? 'text-orange-500 font-bold' : 'text-zinc-500';
-          const streakIcon = member.currentStreak > 0 
-            ? `<i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500 fill-orange-500/10"></i>` 
+          const sClass = member.currentStreak > 0 ? 'text-orange-500 font-bold' : 'text-zinc-500';
+          const sIcon = member.currentStreak > 0
+            ? `<i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500 fill-orange-500/10"></i>`
             : `<i data-lucide="flame" class="w-3.5 h-3.5 text-zinc-600"></i>`;
 
-          const rowHtml = `
-            <div class="glass border ${cardClass} rounded-2xl p-4 flex items-center justify-between transition-all duration-200">
+          container.insertAdjacentHTML('beforeend', `
+            <div class="glass border ${cardCls} rounded-2xl p-4 flex items-center justify-between transition-all duration-200">
               <div class="flex items-center gap-3.5">
-                ${rankBadge}
+                ${badge}
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-white ${isCurrentUser ? 'text-neonLime' : ''}">${member.name}</span>
-                    ${isCurrentUser ? '<span class="text-[10px] bg-zinc-800 text-zinc-400 font-semibold px-1.5 py-0.5 rounded">You</span>' : ''}
+                    <span class="font-bold text-sm text-white ${isMe ? 'text-neonLime' : ''}">${member.name}</span>
+                    ${isMe ? '<span class="text-[10px] bg-zinc-800 text-zinc-400 font-semibold px-1.5 py-0.5 rounded">You</span>' : ''}
                   </div>
-                  <div class="mt-1">${todayActivity}</div>
+                  <div class="mt-1">${activity}</div>
                 </div>
               </div>
-
               <div class="flex items-center gap-3 text-right">
                 <div>
-                  <div class="flex items-center justify-end gap-0.5 ${streakNumberClass}">
-                    <span class="text-sm tracking-tight">${member.currentStreak}</span>
-                    ${streakIcon}
-                  </div>
+                  <div class="flex items-center justify-end gap-0.5 ${sClass}"><span class="text-sm tracking-tight">${member.currentStreak}</span>${sIcon}</div>
                   <span class="text-[10px] text-zinc-400 block mt-0.5">streak</span>
                 </div>
-
                 <div class="border-l border-zinc-800 pl-3">
                   <div class="text-sm font-bold text-neonGreen">${member.workoutDays}</div>
                   <span class="text-[10px] text-zinc-500 block mt-0.5">gym days</span>
                 </div>
-
                 <div class="border-l border-zinc-800 pl-3">
                   <div class="text-sm font-bold text-zinc-300">${member.totalDays}</div>
                   <span class="text-[10px] text-zinc-500 block mt-0.5">total days</span>
                 </div>
               </div>
-            </div>
-          `;
-          
-          container.insertAdjacentHTML('beforeend', rowHtml);
+            </div>`);
         });
-
         lucide.createIcons();
       },
 
-      updateCheckinButton(hasCheckedInToday) {
-        const btn = document.getElementById('checkin-btn');
-        const statusText = document.getElementById('checkin-status-text');
-        const bgAccent = document.getElementById('checkin-bg-accent');
-        
-        if (hasCheckedInToday) {
-          btn.disabled = true;
-          btn.className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed transition-all";
-          btn.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5 text-zinc-500"></i><span>Nice job! Workout Logged!</span>`;
-          statusText.innerHTML = `<span class="text-neonLime font-semibold flex items-center justify-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> You marked today as completed!</span>`;
-          bgAccent.classList.remove('opacity-0');
-          bgAccent.classList.add('opacity-100');
-        } else {
-          btn.disabled = false;
-          btn.className = "relative z-10 w-full bg-neonLime text-black font-bold rounded-2xl py-4 hover:scale-[1.01] active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-base shadow-lg shadow-neonLime/10";
-          btn.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5"></i><span>I Workout'd Today!</span>`;
-          statusText.innerHTML = "Have you hit the gym today?";
-          bgAccent.classList.remove('opacity-100');
-          bgAccent.classList.add('opacity-0');
-        }
-        
-        lucide.createIcons();
+      renderBatchHistory(batches, members, checkins) {
+        const section = document.getElementById('batch-history-section');
+        const list = document.getElementById('batch-history-list');
+        const todayStr = toLocalDate(new Date());
+        const pastBatches = batches.filter(b => b.end_date < todayStr);
+
+        if (pastBatches.length === 0) { section.classList.add('hidden'); return; }
+        section.classList.remove('hidden');
+        list.innerHTML = '';
+
+        pastBatches.sort((a, b) => b.end_date.localeCompare(a.end_date)).forEach(batch => {
+          const stats = calculateStreaks(members, checkins, batch);
+          const topMember = stats.sort((a, b) => b.workoutDays - a.workoutDays)[0];
+          list.insertAdjacentHTML('beforeend', `
+            <div class="glass border border-zinc-800/40 rounded-2xl p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-white">${formatDateShort(batch.start_date)} — ${formatDateShort(batch.end_date)}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">Ended</span>
+              </div>
+              <div class="text-[11px] text-zinc-400">
+                ${topMember ? `Winner: <span class="text-white font-semibold">${topMember.name}</span> (${topMember.workoutDays} gym days)` : 'No check-ins'}
+              </div>
+            </div>`);
+        });
       }
     };
 
     // ==========================================
-    // 🔄 DATA SYNC & CONTROLLER
+    // DATA FETCH
     // ==========================================
     async function fetchGroupData() {
       if (!state.groupId) return;
 
       if (isMockMode) {
-        // Load data from mock DB
         state.group = mockDB.getGroup(state.groupId);
         if (!state.group) {
-          // Group not in localStorage — check if URL has the group name so we can recreate it
           const { groupName } = parseHash();
           if (groupName) {
-            // Auto-create the group locally using the ID and name from the invite link
             const groups = mockDB.getGroups();
             groups.push({ id: state.groupId, name: groupName, created_at: new Date().toISOString() });
-            mockDB.save('showup_groups', groups);
+            mockDB._set('showup_groups', groups);
             state.group = mockDB.getGroup(state.groupId);
-          } else {
-            router.show('notFound');
-            lucide.createIcons();
-            return;
-          }
+          } else { router.show('notFound'); lucide.createIcons(); return; }
         }
         state.members = mockDB.getGroupMembers(state.groupId);
         state.checkins = mockDB.getGroupCheckins(state.groupId);
-        
-        // Retrieve per-tab identity (sessionStorage so each tab can be a different user)
-        const memberIdKey = `showup_member_${state.groupId}`;
-        const savedMemberId = sessionStorage.getItem(memberIdKey);
-        state.currentMember = state.members.find(m => m.id === savedMemberId) || null;
+        state.batches = mockDB.getGroupBatches(state.groupId);
+
+        const savedId = localStorage.getItem(`showup_member_${state.groupId}`);
+        state.currentMember = state.members.find(m => m.id === savedId) || null;
+        state.isCreator = state.group.creator_member_id && state.currentMember && state.group.creator_member_id === state.currentMember.id;
 
         processAndRender();
       } else {
-        // Fetch real data from Supabase
         try {
-          // 1. Fetch group
-          const { data: groupData, error: groupErr } = await supabaseClient
-            .from('groups')
-            .select('*')
-            .eq('id', state.groupId)
-            .single();
-
-          if (groupErr || !groupData) {
-            document.getElementById('not-found-reason').textContent = "This group may have been deleted or the link is invalid.";
-            router.show('notFound');
-            lucide.createIcons();
-            return;
-          }
+          const { data: groupData, error: gErr } = await supabaseClient.from('groups').select('*').eq('id', state.groupId).single();
+          if (gErr || !groupData) { router.show('notFound'); lucide.createIcons(); return; }
           state.group = groupData;
 
-          // 2. Fetch members
-          const { data: membersData, error: membersErr } = await supabaseClient
-            .from('members')
-            .select('*')
-            .eq('group_id', state.groupId);
-
-          if (membersErr) throw membersErr;
+          const { data: membersData } = await supabaseClient.from('members').select('*').eq('group_id', state.groupId);
           state.members = membersData || [];
 
-          // 3. Fetch checkins
-          const memberIds = state.members.map(m => m.id);
+          const mids = state.members.map(m => m.id);
           let checkinsData = [];
-          if (memberIds.length > 0) {
-            const { data: cData, error: cErr } = await supabaseClient
-              .from('checkins')
-              .select('*')
-              .in('member_id', memberIds);
-            if (cErr) throw cErr;
+          if (mids.length > 0) {
+            const { data: cData } = await supabaseClient.from('checkins').select('*').in('member_id', mids);
             checkinsData = cData || [];
           }
           state.checkins = checkinsData;
 
-          // 4. Load per-tab identity
-          const memberIdKey = `showup_member_${state.groupId}`;
-          const savedMemberId = sessionStorage.getItem(memberIdKey);
-          state.currentMember = state.members.find(m => m.id === savedMemberId) || null;
+          const { data: batchData } = await supabaseClient.from('batches').select('*').eq('group_id', state.groupId);
+          state.batches = batchData || [];
+
+          const savedId = localStorage.getItem(`showup_member_${state.groupId}`);
+          state.currentMember = state.members.find(m => m.id === savedId) || null;
+          state.isCreator = state.group.creator_member_id && state.currentMember && state.group.creator_member_id === state.currentMember.id;
 
           processAndRender();
         } catch (err) {
-          console.error("Supabase load error:", err);
-          UI.showToast("Failed to sync database", "error");
+          console.error("Fetch error:", err);
+          UI.showToast("Failed to sync", "error");
         }
       }
     }
 
     function processAndRender() {
-      // Calculate streaks
-      const membersWithStreaks = calculateStreaks(state.members, state.checkins);
-      
-      // Update header/title details
+      const todayStr = toLocalDate(new Date());
+
+      // Find active or most recent batch
+      state.activeBatch = state.batches
+        .filter(b => todayStr >= b.start_date && todayStr <= b.end_date)
+        .sort((a, b) => b.start_date.localeCompare(a.start_date))[0] || null;
+
+      // If no active batch, show most recent (could be upcoming or expired)
+      if (!state.activeBatch && state.batches.length > 0) {
+        state.activeBatch = state.batches.sort((a, b) => b.start_date.localeCompare(a.start_date))[0];
+      }
+
       document.getElementById('dashboard-group-name').innerText = state.group.name;
       document.getElementById('join-group-subtitle').innerHTML = `You have been invited to join <strong class="text-neonLime">${state.group.name}</strong>.`;
 
-      // Determine routing step
       if (!state.currentMember) {
         router.show('joinGroup');
+      } else if (state.batches.length === 0 && state.isCreator) {
+        // Creator hasn't set batch dates yet
+        router.show('setBatch');
+        renderCalendar();
+      } else if (state.batches.length === 0 && !state.isCreator) {
+        // Member waiting for creator to set batch
+        router.show('dashboard');
+        UI.renderBatchInfo(null);
+        document.getElementById('checkin-status-text').textContent = 'Waiting for the group creator to set batch dates...';
+        document.getElementById('checkin-btn').disabled = true;
+        document.getElementById('checkin-btn').className = "relative z-10 w-full bg-zinc-800 text-zinc-500 font-bold rounded-2xl py-4 flex items-center justify-center gap-2 text-base border border-zinc-700/50 cursor-not-allowed";
+        document.getElementById('checkin-btn').innerHTML = `<i data-lucide="clock" class="w-5 h-5 text-zinc-500"></i><span>Waiting for Batch</span>`;
+        lucide.createIcons();
+        UI.renderLeaderboard([]);
       } else {
         router.show('dashboard');
-        // Render check-in button state
+        const membersWithStreaks = calculateStreaks(state.members, state.checkins, state.activeBatch);
+        UI.renderBatchInfo(state.activeBatch);
         const me = membersWithStreaks.find(m => m.id === state.currentMember.id);
-        UI.updateCheckinButton(me ? me.hasCheckedInToday : false);
+        UI.updateCheckinButton(me ? me.hasCheckedInToday : false, state.activeBatch);
+        UI.renderLeaderboard(membersWithStreaks);
+        UI.renderBatchHistory(state.batches, state.members, state.checkins);
       }
-
-      // Render leaderboard
-      UI.renderLeaderboard(membersWithStreaks);
     }
 
-    // Trigger local state calculation and render
+    // ==========================================
+    // ACTIONS
+    // ==========================================
     async function triggerCheckin() {
       if (!state.currentMember) return;
-      const todayStr = getTodayLocalDate();
+      const todayStr = toLocalDate(new Date());
 
-      // Explode Confetti!
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.8 },
-        colors: ['#A3E635', '#22C55E', '#FFFFFF']
-      });
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#A3E635','#22C55E','#FFFFFF'] });
 
       if (isMockMode) {
-        const newCheckin = mockDB.createCheckin(state.currentMember.id, todayStr);
-        if (newCheckin) {
-          UI.showToast("Streak updated!");
-          await fetchGroupData();
+        if (mockDB.createCheckin(state.currentMember.id, todayStr)) {
+          UI.showToast("Streak updated!"); await fetchGroupData();
         }
       } else {
         try {
-          const { data, error } = await supabaseClient
-            .from('checkins')
-            .insert([{ member_id: state.currentMember.id, logged_date: todayStr }])
-            .select();
-
-          if (error) {
-            if (error.code === '23505') { // unique violation
-              UI.showToast("Already logged for today!");
-            } else {
-              throw error;
-            }
-          } else {
-            UI.showToast("Streak updated!");
-            await fetchGroupData();
-          }
-        } catch (err) {
-          console.error("Check-in error:", err);
-          UI.showToast("Failed to record check-in", "error");
-        }
+          const { error } = await supabaseClient.from('checkins').insert([{ member_id: state.currentMember.id, logged_date: todayStr }]).select();
+          if (error) { if (error.code === '23505') UI.showToast("Already logged today!"); else throw error; }
+          else { UI.showToast("Streak updated!"); await fetchGroupData(); }
+        } catch (err) { console.error(err); UI.showToast("Check-in failed", "error"); }
       }
     }
 
-    // Setup Supabase Real-time DB Subscriptions
-    function setupSupabaseSubscriptions() {
-      if (isMockMode || !supabaseClient) return;
-
-      // Subscribe to members insertion
-      supabaseClient
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
-          fetchGroupData();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'checkins' }, () => {
-          fetchGroupData();
-        })
-        .subscribe();
-    }
-
     // ==========================================
-    // 🖱️ INTERACTION LISTENERS & INITIALIZATION
+    // EVENT LISTENERS
     // ==========================================
-    
-    // Hash router handler
+    // Hash router
     window.addEventListener('hashchange', () => {
       const { groupId } = parseHash();
-      if (groupId) {
-        state.groupId = groupId;
-        fetchGroupData();
-      } else {
-        state.groupId = null;
-        state.currentMember = null;
-        router.show('createGroup');
-      }
+      if (groupId) { state.groupId = groupId; fetchGroupData(); }
+      else { state.groupId = null; state.currentMember = null; router.show('createGroup'); }
     });
 
-    // Mock DB multi-tab updates listener
-    window.addEventListener('storage', () => {
-      if (isMockMode && state.groupId) {
-        fetchGroupData();
-      }
-    });
+    window.addEventListener('storage', () => { if (isMockMode && state.groupId) fetchGroupData(); });
 
-    // Create Group Form
+    // Create Group
     document.getElementById('create-group-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const groupNameInput = document.getElementById('group-name-input');
-      const name = groupNameInput.value.trim();
+      const input = document.getElementById('group-name-input');
+      const name = input.value.trim();
       if (!name) return;
 
       if (isMockMode) {
-        // Check for duplicate group name
-        const existing = mockDB.getGroups().find(g => g.name.toLowerCase() === name.toLowerCase());
-        if (existing) {
-          UI.showToast("This group name already exists!", "error");
-          return;
+        if (mockDB.getGroups().find(g => g.name.toLowerCase() === name.toLowerCase())) {
+          UI.showToast("This group name already exists!", "error"); return;
         }
-        const newGroup = mockDB.createGroup(name);
-        setGroupHash(newGroup.id, name);
+        const group = mockDB.createGroup(name);
+        // Creator joins automatically
+        const member = mockDB.createMember(group.id, 'Creator');
+        localStorage.setItem(`showup_member_${group.id}`, member.id);
+        mockDB.updateGroup(group.id, { creator_member_id: member.id });
+        setGroupHash(group.id, name);
       } else {
         try {
-          const { data, error } = await supabaseClient
-            .from('groups')
-            .insert([{ name }])
-            .select()
-            .single();
+          // Create group first
+          const { data: gData, error: gErr } = await supabaseClient.from('groups').insert([{ name }]).select().single();
+          if (gErr) { if (gErr.code === '23505') { UI.showToast("This group name already exists!", "error"); return; } throw gErr; }
 
-          if (error) {
-            if (error.code === '23505') {
-              UI.showToast("This group name already exists!", "error");
-              return;
-            }
-            throw error;
-          }
-          setGroupHash(data.id, name);
-        } catch (err) {
-          console.error("Create group error:", err);
-          UI.showToast("Failed to create group", "error");
-        }
+          // Auto-join creator as member — they'll set their name on the join screen
+          // Actually, redirect to batch setup first, then join
+          setGroupHash(gData.id, name);
+        } catch (err) { console.error(err); UI.showToast("Failed to create group", "error"); }
       }
-      groupNameInput.value = '';
+      input.value = '';
     });
 
-    // Join Group Form
+    // Join Group
     document.getElementById('join-group-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const usernameInput = document.getElementById('join-username-input');
-      const name = usernameInput.value.trim();
+      const input = document.getElementById('join-username-input');
+      const name = input.value.trim();
       if (!name || !state.groupId) return;
 
       if (isMockMode) {
-        // Check for duplicate nickname in this group
-        const existingMember = mockDB.getGroupMembers(state.groupId).find(m => m.name.toLowerCase() === name.toLowerCase());
-        if (existingMember) {
-          UI.showToast("This nickname is already taken in this group!", "error");
-          return;
+        if (mockDB.getGroupMembers(state.groupId).find(m => m.name.toLowerCase() === name.toLowerCase())) {
+          UI.showToast("This nickname is already taken!", "error"); return;
         }
         const member = mockDB.createMember(state.groupId, name);
-        sessionStorage.setItem(`showup_member_${state.groupId}`, member.id);
+        localStorage.setItem(`showup_member_${state.groupId}`, member.id);
+        // If this is the first member, make them the creator
+        if (mockDB.getGroupMembers(state.groupId).length === 1) {
+          mockDB.updateGroup(state.groupId, { creator_member_id: member.id });
+        }
         await fetchGroupData();
       } else {
         try {
-          const { data, error } = await supabaseClient
-            .from('members')
-            .insert([{ group_id: state.groupId, name }])
-            .select()
-            .single();
+          const { data, error } = await supabaseClient.from('members').insert([{ group_id: state.groupId, name }]).select().single();
+          if (error) { if (error.code === '23505') { UI.showToast("This nickname is already taken!", "error"); return; } throw error; }
+          localStorage.setItem(`showup_member_${state.groupId}`, data.id);
 
-          if (error) {
-            if (error.code === '23505') {
-              UI.showToast("This nickname is already taken in this group!", "error");
-              return;
-            }
-            throw error;
+          // If first member joining via Supabase, set as creator
+          const { data: memberCount } = await supabaseClient.from('members').select('id', { count: 'exact' }).eq('group_id', state.groupId);
+          if (memberCount && memberCount.length === 1) {
+            await supabaseClient.from('groups').update({ creator_member_id: data.id }).eq('id', state.groupId);
           }
-          sessionStorage.setItem(`showup_member_${state.groupId}`, data.id);
           await fetchGroupData();
-        } catch (err) {
-          console.error("Join group error:", err);
-          UI.showToast("Failed to join group", "error");
-        }
+        } catch (err) { console.error(err); UI.showToast("Failed to join group", "error"); }
       }
-      usernameInput.value = '';
+      input.value = '';
     });
 
-    // Checkin click trigger
+    // Save Batch
+    document.getElementById('save-batch-btn').addEventListener('click', async () => {
+      if (!state.batchStart || !state.batchEnd || !state.groupId) return;
+
+      if (isMockMode) {
+        mockDB.createBatch(state.groupId, state.batchStart, state.batchEnd);
+        UI.showToast("Batch saved!"); await fetchGroupData();
+      } else {
+        try {
+          const { error } = await supabaseClient.from('batches').insert([{
+            group_id: state.groupId, start_date: state.batchStart, end_date: state.batchEnd
+          }]);
+          if (error) throw error;
+          UI.showToast("Batch saved!"); await fetchGroupData();
+        } catch (err) { console.error(err); UI.showToast("Failed to save batch", "error"); }
+      }
+
+      state.batchStart = null; state.batchEnd = null;
+    });
+
+    // Check-in
     document.getElementById('checkin-btn').addEventListener('click', triggerCheckin);
 
-    // Share link button click
+    // Share
     document.getElementById('share-btn').addEventListener('click', () => {
-      const inviteUrl = window.location.href;
-      navigator.clipboard.writeText(inviteUrl).then(() => {
-        UI.showToast("Copied invite link to clipboard!");
-      }).catch(() => {
-        UI.showToast("Failed to copy link", "error");
-      });
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => UI.showToast("Copied invite link!"))
+        .catch(() => UI.showToast("Failed to copy", "error"));
     });
 
-    // Ranking selectors
-    document.getElementById('rank-streak-btn').addEventListener('click', (e) => {
+    // Ranking toggles
+    document.getElementById('rank-streak-btn').addEventListener('click', () => {
       state.rankingType = 'streak';
       document.getElementById('rank-streak-btn').className = "px-2.5 py-1 rounded bg-zinc-800 text-white font-bold transition-all";
       document.getElementById('rank-total-btn').className = "px-2.5 py-1 rounded transition-all";
       processAndRender();
     });
-
-    document.getElementById('rank-total-btn').addEventListener('click', (e) => {
+    document.getElementById('rank-total-btn').addEventListener('click', () => {
       state.rankingType = 'total';
       document.getElementById('rank-total-btn').className = "px-2.5 py-1 rounded bg-zinc-800 text-white font-bold transition-all";
       document.getElementById('rank-streak-btn').className = "px-2.5 py-1 rounded transition-all";
       processAndRender();
     });
 
-    // Support / Feedback form and modal triggers
+    // Feedback
     const feedbackModal = document.getElementById('feedback-modal');
-    
-    document.getElementById('feedback-trigger-btn').addEventListener('click', () => {
-      feedbackModal.classList.remove('hidden');
-    });
-
-    document.getElementById('feedback-close-btn').addEventListener('click', () => {
-      feedbackModal.classList.add('hidden');
-    });
-
-    feedbackModal.addEventListener('click', (e) => {
-      if (e.target === feedbackModal) feedbackModal.classList.add('hidden');
-    });
+    document.getElementById('feedback-trigger-btn').addEventListener('click', () => feedbackModal.classList.remove('hidden'));
+    document.getElementById('feedback-close-btn').addEventListener('click', () => feedbackModal.classList.add('hidden'));
+    feedbackModal.addEventListener('click', (e) => { if (e.target === feedbackModal) feedbackModal.classList.add('hidden'); });
 
     document.getElementById('feedback-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const type = document.getElementById('feedback-type').value;
-      const message = document.getElementById('feedback-message').value.trim();
-      const memberId = state.currentMember ? state.currentMember.id : null;
-      const groupId = state.groupId || null;
+      const msg = document.getElementById('feedback-message').value.trim();
+      if (!msg) return;
+      const mid = state.currentMember ? state.currentMember.id : null;
 
-      if (!message) return;
-
-      if (isMockMode) {
-        mockDB.createTicket(memberId, groupId, type, message);
-        UI.showToast("Feedback submitted locally!");
-      } else {
+      if (isMockMode) { mockDB.createTicket(mid, state.groupId, type, msg); UI.showToast("Feedback submitted!"); }
+      else {
         try {
-          const { error } = await supabaseClient
-            .from('support_tickets')
-            .insert([{ member_id: memberId, group_id: groupId, type, message }]);
-          
+          const { error } = await supabaseClient.from('support_tickets').insert([{ member_id: mid, group_id: state.groupId, type, message: msg }]);
           if (error) throw error;
-          UI.showToast("Feedback sent to developers!");
-        } catch (err) {
-          console.error("Support ticket insertion error:", err);
-          UI.showToast("Failed to submit feedback", "error");
-        }
+          UI.showToast("Feedback sent!");
+        } catch (err) { UI.showToast("Failed to submit", "error"); }
       }
-
       document.getElementById('feedback-message').value = '';
       feedbackModal.classList.add('hidden');
-      renderTickets();
     });
 
-    // Toggle tickets viewer
-    document.getElementById('toggle-tickets-btn').addEventListener('click', () => {
-      const section = document.getElementById('tickets-section');
-      const btn = document.getElementById('toggle-tickets-btn');
-      const isHidden = section.classList.contains('hidden');
-      if (isHidden) {
-        renderTickets();
-        section.classList.remove('hidden');
-        btn.querySelector('span').textContent = 'Hide submitted tickets';
-      } else {
-        section.classList.add('hidden');
-        btn.querySelector('span').textContent = 'View submitted tickets';
-      }
-    });
-
-    function renderTickets() {
-      const container = document.getElementById('tickets-list');
-      let tickets = [];
-      if (isMockMode) {
-        tickets = mockDB.getTickets();
-      }
-      if (tickets.length === 0) {
-        container.innerHTML = '<p class="text-[11px] text-zinc-500 text-center py-2">No tickets submitted yet.</p>';
-        return;
-      }
-      const typeLabels = { bug: '🐛 Bug', feature: '💡 Feature', other: '💬 Comment' };
-      container.innerHTML = tickets.slice().reverse().map(t => `
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 text-xs">
-          <div class="flex items-center justify-between mb-1">
-            <span class="font-semibold text-zinc-300">${typeLabels[t.type] || t.type}</span>
-            <span class="text-[10px] text-zinc-500">${new Date(t.created_at).toLocaleDateString()}</span>
-          </div>
-          <p class="text-zinc-400 break-words">${t.message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-        </div>
-      `).join('');
+    // Realtime subscriptions
+    function setupSubscriptions() {
+      if (isMockMode || !supabaseClient) return;
+      supabaseClient.channel('db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => fetchGroupData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'checkins' }, () => fetchGroupData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'batches' }, () => fetchGroupData())
+        .subscribe();
     }
 
-    // Page Load Router Initialization
+    // ==========================================
+    // INIT
+    // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      
       const { groupId } = parseHash();
-      if (groupId) {
-        state.groupId = groupId;
-        fetchGroupData();
-        setupSupabaseSubscriptions();
-      } else {
-        router.show('createGroup');
-      }
+      if (groupId) { state.groupId = groupId; fetchGroupData(); setupSubscriptions(); }
+      else router.show('createGroup');
     });
   </script>
 </body>
