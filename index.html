@@ -131,6 +131,15 @@
           <h2 class="text-xl font-bold tracking-tight mb-2">Join Gym Group</h2>
           <p id="join-group-subtitle" class="text-gray-400 text-sm">You have been invited to join a workout group.</p>
         </div>
+        <!-- Batch details shown before joining -->
+        <div id="join-batch-info" class="hidden bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-left">
+          <div class="flex items-center gap-2 mb-2">
+            <i data-lucide="calendar-range" class="w-4 h-4 text-neonLime"></i>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Batch Window</span>
+          </div>
+          <p id="join-batch-dates" class="text-sm font-semibold text-white mb-1"></p>
+          <p id="join-batch-status" class="text-xs text-zinc-400"></p>
+        </div>
         <form id="join-group-form" class="flex flex-col gap-4 text-left">
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Your Nickname</label>
@@ -786,6 +795,23 @@
 
       if (!state.currentMember) {
         router.show('joinGroup');
+        // Show batch details on join screen
+        const joinBatchInfo = document.getElementById('join-batch-info');
+        if (state.activeBatch) {
+          joinBatchInfo.classList.remove('hidden');
+          const bStart = formatDateShort(state.activeBatch.start_date);
+          const bEnd = formatDateShort(state.activeBatch.end_date);
+          const days = daysBetween(state.activeBatch.start_date, state.activeBatch.end_date);
+          document.getElementById('join-batch-dates').textContent = `${bStart} — ${bEnd} (${days} days)`;
+          const isActive = todayStr >= state.activeBatch.start_date && todayStr <= state.activeBatch.end_date;
+          const isUpcoming = todayStr < state.activeBatch.start_date;
+          if (isActive) document.getElementById('join-batch-status').textContent = '🟢 This batch is currently active — join now to start!';
+          else if (isUpcoming) document.getElementById('join-batch-status').textContent = '🔵 This batch hasn\'t started yet — join now so you\'re ready!';
+          else document.getElementById('join-batch-status').textContent = '⚫ This batch has ended.';
+        } else {
+          joinBatchInfo.classList.add('hidden');
+        }
+        lucide.createIcons();
       } else if (state.batches.length === 0 && state.isCreator) {
         // Creator hasn't set batch dates yet
         router.show('setBatch');
