@@ -130,6 +130,7 @@
         <div>
           <h2 class="text-xl font-bold tracking-tight mb-2">Join Gym Group</h2>
           <p id="join-group-subtitle" class="text-gray-400 text-sm">You have been invited to join a workout group.</p>
+          <p id="join-member-count" class="text-xs text-zinc-500 mt-1.5 flex items-center justify-center gap-1"><i data-lucide="users" class="w-3 h-3"></i></p>
         </div>
         <!-- Batch details shown before joining -->
         <div id="join-batch-info" class="hidden bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-left">
@@ -795,7 +796,7 @@
 
       if (!state.currentMember) {
         router.show('joinGroup');
-        // Show batch details on join screen
+        // Show batch details and member count on join screen
         const joinBatchInfo = document.getElementById('join-batch-info');
         if (state.activeBatch) {
           joinBatchInfo.classList.remove('hidden');
@@ -811,6 +812,13 @@
         } else {
           joinBatchInfo.classList.add('hidden');
         }
+        // Show member count
+        const memberCount = state.members.length;
+        document.getElementById('join-member-count').textContent = memberCount === 0
+          ? 'Be the first to join!'
+          : memberCount === 1
+            ? '1 member already in the group'
+            : `${memberCount} members already in the group`;
         lucide.createIcons();
       } else if (state.batches.length === 0 && state.isCreator) {
         // Creator hasn't set batch dates yet
