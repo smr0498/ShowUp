@@ -214,7 +214,7 @@
           <div id="batch-status-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full">Active</div>
         </div>
 
-        <!-- Check In -->
+        <!-- Check In (normal) -->
         <div id="checkin-card" class="glass border border-zinc-800/40 rounded-3xl p-6 text-center flex flex-col items-center gap-4 relative overflow-hidden mt-3">
           <div id="checkin-bg-accent" class="absolute inset-0 bg-gradient-to-t from-neonLime/5 to-transparent pointer-events-none opacity-0 transition-opacity duration-300"></div>
           <div class="relative z-10 w-full">
@@ -229,6 +229,20 @@
             class="relative z-10 w-full hidden bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold rounded-xl py-3 transition-all duration-150 flex items-center justify-center gap-2 text-sm border border-zinc-700/50">
             <i data-lucide="history" class="w-4 h-4 text-amber-400"></i><span>Forgot yesterday? Mark it now</span>
           </button>
+        </div>
+
+        <!-- Check In (test mode - pick any date) -->
+        <div id="checkin-card-test" class="hidden glass border border-amber-500/20 rounded-3xl p-6 text-center flex flex-col items-center gap-4 mt-3">
+          <div class="w-full">
+            <p class="text-xs text-amber-400 font-medium uppercase tracking-wider mb-1">Test Mode — Mark Any Date</p>
+            <h3 class="text-sm font-semibold text-gray-300">Pick a date from this batch and mark it</h3>
+          </div>
+          <div class="flex gap-2 w-full">
+            <input type="date" id="test-date-input" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-neonLime">
+            <button id="test-checkin-btn" class="bg-neonLime text-black font-bold rounded-xl px-5 py-3 text-sm hover:scale-[1.02] transition-transform flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i> Mark
+            </button>
+          </div>
         </div>
 
         <!-- Leaderboard Header -->
@@ -1064,6 +1078,12 @@
         const membersWithStreaks = calculateStreaks(state.members, state.checkins, state.activeBatch);
         UI.renderBatchInfo(state.activeBatch);
         const me = membersWithStreaks.find(m => m.id === state.currentMember.id);
+
+        // TEST BUILD: Show test check-in card when batch has ended
+        const batchEnded = state.activeBatch && state.activeBatch.end_date < todayStr;
+        document.getElementById('checkin-card').classList.toggle('hidden', batchEnded);
+        document.getElementById('checkin-card-test').classList.toggle('hidden', !batchEnded);
+
         // Check if yesterday is already checked in
         const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
         const yesterdayStr = toLocalDate(yesterdayDate);
@@ -1132,6 +1152,13 @@
     });
 
     window.addEventListener('storage', () => { if (isMockMode && state.groupId) fetchGroupData(); });
+
+    // Test mode check-in (pick any date)
+    document.getElementById('test-checkin-btn').addEventListener('click', () => {
+      const dateInput = document.getElementById('test-date-input').value;
+      if (!dateInput) { UI.showToast("Pick a date first", "error"); return; }
+      triggerCheckin(dateInput);
+    });
 
     // History calendar navigation
     document.getElementById('history-prev').addEventListener('click', () => {
