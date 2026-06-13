@@ -1105,19 +1105,31 @@
     async function triggerCheckin(dateOverride) {
       if (!state.currentMember) return;
       const dateStr = dateOverride || toLocalDate(new Date());
-      const isYesterday = dateOverride ? true : false;
+      const isBackdate = dateOverride ? true : false;
 
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#A3E635','#22C55E','#FFFFFF'] });
+      // Validate date is within batch window
+      if (state.activeBatch) {
+        if (dateStr < state.activeBatch.start_date || dateStr > state.activeBatch.end_date) {
+          UI.showToast(`Date must be between ${formatDateShort(state.activeBatch.start_date)} and ${formatDateShort(state.activeBatch.end_date)}`, "error");
+          return;
+        }
+      }
 
       if (isMockMode) {
         if (mockDB.createCheckin(state.currentMember.id, dateStr)) {
-          UI.showToast(isYesterday ? "Yesterday's session saved!" : "Streak updated!"); await fetchGroupData();
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#A3E635','#22C55E','#FFFFFF'] });
+          UI.showToast(isBackdate ? "Marked!" : "Streak updated!"); await fetchGroupData();
+        } else {
+          UI.showToast("Already logged for this date!", "error");
         }
       } else {
         try {
           const { error } = await supabaseClient.from('checkins').insert([{ member_id: state.currentMember.id, logged_date: dateStr }]).select();
-          if (error) { if (error.code === '23505') UI.showToast("Already logged!"); else throw error; }
-          else { UI.showToast(isYesterday ? "Yesterday's session saved!" : "Streak updated!"); await fetchGroupData(); }
+          if (error) { if (error.code === '23505') UI.showToast("Already logged for this date!", "error"); else throw error; }
+          else {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#A3E635','#22C55E','#FFFFFF'] });
+            UI.showToast(isBackdate ? "Marked!" : "Streak updated!"); await fetchGroupData();
+          }
         } catch (err) { console.error(err); UI.showToast("Check-in failed", "error"); }
       }
     }
