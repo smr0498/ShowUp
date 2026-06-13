@@ -1153,10 +1153,17 @@
 
     window.addEventListener('storage', () => { if (isMockMode && state.groupId) fetchGroupData(); });
 
-    // Test mode check-in (pick any date)
+    // Test mode check-in (pick any date within batch)
     document.getElementById('test-checkin-btn').addEventListener('click', () => {
       const dateInput = document.getElementById('test-date-input').value;
       if (!dateInput) { UI.showToast("Pick a date first", "error"); return; }
+      // Validate date is within batch window
+      if (state.activeBatch) {
+        if (dateInput < state.activeBatch.start_date || dateInput > state.activeBatch.end_date) {
+          UI.showToast(`Date must be between ${formatDateShort(state.activeBatch.start_date)} and ${formatDateShort(state.activeBatch.end_date)}`, "error");
+          return;
+        }
+      }
       triggerCheckin(dateInput);
     });
 
@@ -1293,10 +1300,16 @@
       processAndRender();
     });
 
-    // Dev Mode — test check-in for any date
+    // Dev Mode — test check-in for any date (within batch)
     document.getElementById('dev-checkin-btn').addEventListener('click', () => {
       const dateInput = document.getElementById('dev-date-input').value;
       if (!dateInput) { UI.showToast("Pick a date first", "error"); return; }
+      if (state.activeBatch) {
+        if (dateInput < state.activeBatch.start_date || dateInput > state.activeBatch.end_date) {
+          UI.showToast(`Date must be between ${formatDateShort(state.activeBatch.start_date)} and ${formatDateShort(state.activeBatch.end_date)}`, "error");
+          return;
+        }
+      }
       triggerCheckin(dateInput);
     });
 
