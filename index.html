@@ -195,9 +195,6 @@
         <button id="tab-history" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl transition-all">
           <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> History
         </button>
-        <button id="tab-dev" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl transition-all">
-          <i data-lucide="bug" class="w-3.5 h-3.5 text-amber-400"></i> Dev Tools
-        </button>
       </div>
 
       <!-- TAB: HOME -->
@@ -231,19 +228,6 @@
           </button>
         </div>
 
-        <!-- Check In (test mode - pick any date) -->
-        <div id="checkin-card-test" class="hidden glass border border-amber-500/20 rounded-3xl p-6 text-center flex flex-col items-center gap-4 mt-3">
-          <div class="w-full">
-            <p class="text-xs text-amber-400 font-medium uppercase tracking-wider mb-1">Test Mode — Mark Any Date</p>
-            <h3 class="text-sm font-semibold text-gray-300">Pick a date from this batch and mark it</h3>
-          </div>
-          <div class="flex gap-2 w-full">
-            <input type="date" id="test-date-input" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-neonLime">
-            <button id="test-checkin-btn" class="bg-neonLime text-black font-bold rounded-xl px-5 py-3 text-sm hover:scale-[1.02] transition-transform flex items-center gap-1.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4"></i> Mark
-            </button>
-          </div>
-        </div>
 
         <!-- Leaderboard Header -->
         <div class="flex items-center justify-between px-1 mt-4">
@@ -296,20 +280,6 @@
         </div>
       </div>
 
-      <!-- TAB: DEV TOOLS -->
-      <div id="tab-content-dev" class="hidden">
-        <div class="mt-1 glass border border-amber-500/30 rounded-2xl p-4">
-          <div class="flex items-center gap-2 mb-3">
-            <i data-lucide="bug" class="w-4 h-4 text-amber-400"></i>
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Dev Mode — Test Check-in</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-3">Pick any date and mark attendance for testing. No date restrictions.</p>
-          <div class="flex gap-2">
-            <input type="date" id="dev-date-input" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
-            <button id="dev-checkin-btn" class="bg-amber-500 text-black font-semibold rounded-xl px-4 py-2 text-sm hover:scale-[1.02] transition-transform">Mark</button>
-          </div>
-        </div>
-      </div>
     </section>
 
   </main>
@@ -550,8 +520,9 @@
 
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isPast = false; // TEST BUILD: allow past dates
+        const isPast = dateStr < todayStr;
         let classes = 'cal-day text-zinc-300';
+        if (isPast) classes += ' disabled';
         if (dateStr === todayStr) classes += ' today';
         if (dateStr === state.batchStart || dateStr === state.batchEnd) classes += ' selected';
         else if (state.batchStart && state.batchEnd && dateStr > state.batchStart && dateStr < state.batchEnd) classes += ' in-range';
@@ -698,9 +669,12 @@
         const yesterdayStr = toLocalDate(yesterdayDate);
 
         // Check batch status
-        // TEST BUILD: batch blocking disabled for testing
         let batchBlocked = false;
         let blockMsg = '';
+        if (batch) {
+          if (todayStr < batch.start_date) { batchBlocked = true; blockMsg = `Batch starts ${formatDateShort(batch.start_date)}. Check back then!`; }
+          else if (todayStr > batch.end_date) { batchBlocked = true; blockMsg = 'This batch has ended. Leaderboard is frozen.'; }
+        }
 
         // Yesterday grace period logic:
         // Show "Mark Yesterday" if: not batch-blocked, yesterday not checked in,
@@ -858,8 +832,7 @@
 
         // Check if recap already dismissed for this batch
         const recapKey = `showup_recap_seen_${batch.id}`;
-        // TEST BUILD: commented out so recap shows every time
-        // if (localStorage.getItem(recapKey)) return;
+        if (localStorage.getItem(recapKey)) return;
 
         const stats = calculateStreaks(members, checkins, batch);
         const me = stats.find(m => m.id === currentMember.id);
@@ -1079,11 +1052,6 @@
         UI.renderBatchInfo(state.activeBatch);
         const me = membersWithStreaks.find(m => m.id === state.currentMember.id);
 
-        // TEST BUILD: Show test check-in card when batch has ended
-        const batchEnded = state.activeBatch && state.activeBatch.end_date < todayStr;
-        document.getElementById('checkin-card').classList.toggle('hidden', batchEnded);
-        document.getElementById('checkin-card-test').classList.toggle('hidden', !batchEnded);
-
         // Check if yesterday is already checked in
         const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
         const yesterdayStr = toLocalDate(yesterdayDate);
@@ -1139,14 +1107,13 @@
     // ==========================================
     // Tab navigation
     function switchTab(tabName) {
-      const tabs = ['home', 'history', 'dev'];
+      const tabs = ['home', 'history'];
       const activeClass = 'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-bold transition-all';
       const inactiveClass = 'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl transition-all';
       tabs.forEach(t => {
         document.getElementById(`tab-${t}`).className = t === tabName ? activeClass : inactiveClass;
         document.getElementById(`tab-content-${t}`).classList.toggle('hidden', t !== tabName);
       });
-      // Re-render history calendar when switching to history tab
       if (tabName === 'history' && state.currentMember) {
         UI.renderHistoryCalendar(state.checkins, state.currentMember);
         lucide.createIcons();
@@ -1154,7 +1121,6 @@
     }
     document.getElementById('tab-home').addEventListener('click', () => switchTab('home'));
     document.getElementById('tab-history').addEventListener('click', () => switchTab('history'));
-    document.getElementById('tab-dev').addEventListener('click', () => switchTab('dev'));
 
     // Hash router
     window.addEventListener('hashchange', () => {
@@ -1165,19 +1131,6 @@
 
     window.addEventListener('storage', () => { if (isMockMode && state.groupId) fetchGroupData(); });
 
-    // Test mode check-in (pick any date within batch)
-    document.getElementById('test-checkin-btn').addEventListener('click', () => {
-      const dateInput = document.getElementById('test-date-input').value;
-      if (!dateInput) { UI.showToast("Pick a date first", "error"); return; }
-      // Validate date is within batch window
-      if (state.activeBatch) {
-        if (dateInput < state.activeBatch.start_date || dateInput > state.activeBatch.end_date) {
-          UI.showToast(`Date must be between ${formatDateShort(state.activeBatch.start_date)} and ${formatDateShort(state.activeBatch.end_date)}`, "error");
-          return;
-        }
-      }
-      triggerCheckin(dateInput);
-    });
 
     // History calendar navigation
     document.getElementById('history-prev').addEventListener('click', () => {
@@ -1312,18 +1265,6 @@
       processAndRender();
     });
 
-    // Dev Mode — test check-in for any date (within batch)
-    document.getElementById('dev-checkin-btn').addEventListener('click', () => {
-      const dateInput = document.getElementById('dev-date-input').value;
-      if (!dateInput) { UI.showToast("Pick a date first", "error"); return; }
-      if (state.activeBatch) {
-        if (dateInput < state.activeBatch.start_date || dateInput > state.activeBatch.end_date) {
-          UI.showToast(`Date must be between ${formatDateShort(state.activeBatch.start_date)} and ${formatDateShort(state.activeBatch.end_date)}`, "error");
-          return;
-        }
-      }
-      triggerCheckin(dateInput);
-    });
 
     // Feedback
     const feedbackModal = document.getElementById('feedback-modal');
@@ -1365,11 +1306,6 @@
     // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      // Dev mode: show test panel if &dev=true is in URL
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.hash.slice(1));
-      if (params.get('dev') === 'true') {
-        document.getElementById('dev-panel').classList.remove('hidden');
-      }
       const { groupId } = parseHash();
       if (groupId) { state.groupId = groupId; fetchGroupData(); setupSubscriptions(); }
       else router.show('createGroup');
